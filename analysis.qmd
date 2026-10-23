@@ -1,4 +1,47 @@
 ---
 title: "Analyzing US Births"
 author: "Mireille"
+execute:
+  echo: false
 ---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+births <- read_excel("data/us_births_1994_2014.xlsx")
+glimpse(births)
+```
+
+```{r}
+#| cache: true
+births_tibble <- births |>
+  mutate(day_of_week = factor(
+    day_of_week,
+    levels = c("Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"),
+    ordered = TRUE
+  ))
+```
+
+```{r}
+births_by_date <- births_tibble |>
+  group_by(month, date_of_month) |>
+  summarize(avg_births = mean(births), .groups = "drop")
+```
+
+```{r}
+christmas_births <- births_tibble |>
+  filter(month == 12) |>
+  group_by(year) |>
+  summarize(
+    christmas_births = births[date_of_month == 25],
+    surrounding_avg = mean(births[date_of_month %in% c(20:24, 27:30)]),
+    christmas_pct_of_baseline = 100 * christmas_births / surrounding_avg,
+    .groups = "drop"
+  )
+
+christmas_births
+```
